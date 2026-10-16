@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlphaForge</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M8 1l7 7-7 7-7-7z%27 fill=%27%232563eb%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/vendor/uPlot.min.css">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">◆</span> AlphaForge <span class="ver" id="ver"></span></div>
+  <nav id="nav">
+    <button data-view="data" class="active">Data</button>
+    <button data-view="build">Build</button>
+    <button data-view="results">Results</button>
+    <button data-view="strategy">Strategy</button>
+    <button data-view="saved">Saved</button>
+  </nav>
+  <div class="status" id="jobstatus"></div>
+</header>
+
+<main>
+  <!-- DATA -->
+  <section id="view-data" class="view active">
+    <div class="grid2">
+      <div class="card">
+        <h2>Import market data</h2>
+        <p class="muted">CSV or TXT with OHLC(V) columns and a timestamp (one datetime column or separate date and time). Exports from TradeStation, NinjaTrader, MetaTrader and Yahoo Finance are recognised.</p>
+        <form id="upload">
+          <label>File <input type="file" name="file" required></label>
+          <div class="row">
+            <label>Name <input name="name" placeholder="ES daily"></label>
+            <label>Symbol <input name="symbol" value="DATA"></label>
+          </div>
+          <div class="row">
+            <label>Point value <input name="point_value" type="number" step="any" value="1"></label>
+            <label>Tick size <input name="tick_size" type="number" step="any" value="0.01"></label>
+            <label>Timezone <input name="timezone" placeholder="UTC or America/New_York"></label>
+          </div>
+          <button class="primary" type="submit">Import and validate</button>
+        </form>
+        <div id="upload-msg"></div>
+      </div>
+      <div class="card">
+        <h2>Synthetic data</h2>
+        <p class="muted">Random-walk data with volatility clustering. It has no edge, so it is the honest null case: strategies that look good here are overfit.</p>
+        <div class="row">
+          <label>Bars <input id="syn-bars" type="number" value="2500"></label>
+          <label>Seed <input id="syn-seed" type="number" value="7"></label>
+          <label>Mean reversion <input id="syn-mr" type="number" step="0.05" value="0"></label>
+        </div>
+        <button id="syn-make">Create synthetic dataset</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Datasets</h2>
+      <div id="datasets" class="list"></div>
+      <div id="ds-chart" class="chart"></div>
+    </div>
+  </section>
+
+  <!-- BUILD -->
+  <section id="view-build" class="view">
+    <div class="card">
+      <h2>Generate strategies</h2>
+      <p class="muted">The genetic search uses in-sample data only. The out-of-sample segment is evaluated once, after the search, for the reported strategies.</p>
+      <div class="formgrid">
+        <label>Dataset <select id="b-dataset"></select></label>
+        <label>Direction <select id="b-direction"><option>long</option><option>short</option><option>both</option></select></label>
+        <label>Fitness <select id="b-fitness"></select></label>
+        <label>Max entry signals <input id="b-maxsig" type="number" min="1" max="5" value="3"></label>
+        <label>Out-of-sample % <input id="b-oos" type="number" min="0" max="80" value="30"></label>
+        <label>Min trades in-sample <input id="b-mintis" type="number" value="30"></label>
+        <label>Min trades out-of-sample <input id="b-mintoos" type="number" value="10"></label>
+        <label>Population <input id="b-pop" type="number" value="120"></label>
+        <label>Generations <input id="b-gens" type="number" value="25"></label>
+        <label>Seed <input id="b-seed" type="number" value="1"></label>
+        <label>Quantity (units) <input id="b-qty" type="number" step="any" value="1"></label>
+        <label>Starting capital <input id="b-capital" type="number" value="100000"></label>
+        <label>Commission per unit per side <input id="b-comm" type="number" step="any" value="0"></label>
+        <label>Slippage ticks per side <input id="b-slip" type="number" step="any" value="1"></label>
+        <label>Stop (× ATR) choices <input id="b-stop" value="none, 1, 1.5, 2, 3"></label>
+        <label>Target (× ATR) choices <input id="b-target" value="none, 1, 2, 3, 4"></label>
+        <label>Trailing stop (× ATR) choices <input id="b-trail" value="none"></label>
+        <label>Max bars in trade choices <input id="b-maxbars" value="none, 3, 5, 10, 20"></label>
+        <label class="check"><input id="b-exitsig" type="checkbox" checked> Allow signal exits</label>
+        <label class="check"><input id="b-profclose" type="checkbox" checked> Allow first-profitable-close exit</label>
+      </div>
+      <h3>Signal categories</h3>
+      <div id="b-cats" class="chips"></div>
+      <div class="actions">
+        <button class="primary" id="b-start">Start generation</button>
+        <button id="b-cancel" disabled>Cancel</button>
+      </div>
+      <div class="progress"><div id="b-bar"></div></div>
+      <div id="b-msg" class="muted"></div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="view-results" class="view">
+    <div class="card">
+      <div class="head">
+        <h2>Generated strategies</h2>
+        <label>Run <select id="r-run"></select></label>
+      </div>
+      <div id="r-warning" class="warn"></div>
+      <div class="tablewrap"><table id="r-table"></table></div>
+    </div>
+  </section>
+
+  <!-- STRATEGY -->
+  <section id="view-strategy" class="view">
+    <div class="card">
+      <div class="head">
+        <h2>Strategy</h2>
+        <div class="actions">
+          <button id="s-save">Save</button>
+          <button id="s-rob-quick">Robustness (quick)</button>
+          <button id="s-rob">Robustness (full)</button>
+          <button id="s-wf">Walk-forward</button>
+        </div>
+      </div>
+      <p id="s-desc" class="desc">Select a strategy from Results or Saved.</p>
+      <div id="s-metrics" class="tablewrap"></div>
+      <h3>Equity (mark-to-market, net of costs) <span class="muted">· shaded = out-of-sample</span></h3>
+      <div id="s-equity" class="chart"></div>
+      <h3>Drawdown</h3>
+      <div id="s-dd" class="chart small"></div>
+    </div>
+    <div class="card">
+      <h2>Robustness</h2>
+      <div id="s-rob-out" class="muted">Not run yet.</div>
+    </div>
+    <div class="card">
+      <h2>Walk-forward</h2>
+      <div id="s-wf-out" class="muted">Not run yet.</div>
+    </div>
+    <div class="card">
+      <div class="head">
+        <h2>Export code</h2>
+        <div class="actions">
+          <select id="s-target"></select>
+          <button id="s-export">Generate</button>
+          <button id="s-copy">Copy</button>
+          <button id="s-download">Download</button>
+        </div>
+      </div>
+      <p class="muted">Only the Python export is executed and verified against the engine in our test suite. Verify platform exports on the platform before trading.</p>
+      <pre id="s-code" class="code"></pre>
+    </div>
+    <div class="card">
+      <h2>Trades</h2>
+      <div class="tablewrap"><table id="s-trades"></table></div>
+    </div>
+  </section>
+
+  <!-- SAVED -->
+  <section id="view-saved" class="view">
+    <div class="card">
+      <h2>Saved strategies</h2>
+      <div id="saved" class="list"></div>
+    </div>
+  </section>
+</main>
+<footer class="foot">Backtests are hypothetical and are not evidence of future profitability. AlphaForge is independent software and is not affiliated with any commercial vendor.</footer>
+<script src="/static/vendor/uPlot.iife.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

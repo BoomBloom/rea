@@ -1,0 +1,50 @@
+name: alphaforge
+
+on:
+  push:
+    paths: ["alphaforge/**", ".github/workflows/alphaforge.yml"]
+  pull_request:
+    paths: ["alphaforge/**", ".github/workflows/alphaforge.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · Python ${{ matrix.python }}${{ matrix.jit == '0' && ' · no JIT' || '' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, python: "3.11", jit: "1" }
+          - { os: ubuntu-latest, python: "3.13", jit: "1" }
+          - { os: ubuntu-latest, python: "3.13", jit: "0" }
+          - { os: macos-latest, python: "3.12", jit: "1" } # Apple Silicon
+          - { os: macos-latest, python: "3.13", jit: "0" }
+          - { os: macos-13, python: "3.11", jit: "1" } # Intel
+    defaults:
+      run:
+        working-directory: alphaforge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.jit }}" = "1" ]; then pip install -e ".[dev]"; else pip install -e . pytest hypothesis httpx; fi
+      - name: Test
+        env:
+          ALPHAFORGE_DISABLE_JIT: ${{ matrix.jit == '0' && '1' || '' }}
+        run: python -m pytest -q
+      - name: CLI smoke test
+        run: |
+          alphaforge demo-data demo.csv --bars 1200 --mean-reversion 0.1
+          alphaforge generate demo.csv --population 30 --generations 3 --min-trades-oos 0 -o run.json --top 1
+          python -c "import json; json.dump(json.load(open('run.json'))['results'][0]['strategy'], open('s.json','w'))"
+          alphaforge robustness demo.csv s.json --quick
+          for t in python pine easylanguage ninjascript mql5; do alphaforge export s.json --target $t -o out.$t; done
+          python out.python demo.csv

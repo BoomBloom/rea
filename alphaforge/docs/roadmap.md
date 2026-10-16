@@ -28,21 +28,20 @@ Status key: ✅ done · 🚧 in progress · ⏭ next · 💡 later
 - ✅ Exports: Python (verified), Pine v5, EasyLanguage, NinjaScript, MQL5
 - ✅ CLI (`generate`, `backtest`, `robustness`, `walkforward`, `export`, `validate`, `serve`)
 - ✅ Local web UI: data, build with live progress, results table, strategy page with equity/drawdown, robustness, walk-forward, export, saved strategies
-- ✅ Test suite (59 tests) on Linux; CI workflow for Linux + macOS
+- ✅ Test suite (59 tests); CI green on Ubuntu, macOS Apple Silicon and macOS Intel (2026-10-16)
 
 ## Phase 4 — Next (highest value first)
 
-1. ⏭ Verify CI green on macOS runners (arm64 and x86-64) and record timings
-2. ⏭ Parallel generation (process pool; spawn-safe for macOS)
-3. ⏭ Percent-of-equity and volatility-targeted position sizing
-4. ⏭ Portfolio of strategies: combined equity, correlation matrix, weights
-5. ⏭ Selection-aware permutation test (re-run search on permuted data, small budget)
-6. ⏭ More signal families: multi-timeframe, intermarket (second dataset), time-of-day for intraday
-7. ⏭ Data connectors (optional, user-supplied keys): Yahoo/Stooq daily, broker CSV presets
-8. 💡 Compile-check platform exports in CI where free toolchains exist (none for EasyLanguage/MQL5); a Pine linter
-9. 💡 Desktop window wrapper (pywebview) and one-file installers (PyInstaller/Briefcase) for macOS and Linux
-10. 💡 Sequence workflows (multi-round filters), equity-curve trading, regime filters
-11. 💡 Strategy import from text rules
+1. ⏭ Parallel generation (process pool; spawn-safe for macOS)
+2. ⏭ Percent-of-equity and volatility-targeted position sizing
+3. ⏭ Portfolio of strategies: combined equity, correlation matrix, weights
+4. ⏭ Selection-aware permutation test (re-run search on permuted data, small budget)
+5. ⏭ More signal families: multi-timeframe, intermarket (second dataset), time-of-day for intraday
+6. ⏭ Data connectors (optional, user-supplied keys): Yahoo/Stooq daily, broker CSV presets
+7. 💡 Compile-check platform exports in CI where free toolchains exist (none for EasyLanguage/MQL5); a Pine linter
+8. 💡 Desktop window wrapper (pywebview) and one-file installers (PyInstaller/Briefcase) for macOS and Linux
+9. 💡 Sequence workflows (multi-round filters), equity-curve trading, regime filters
+10. 💡 Strategy import from text rules
 
 ## Resuming work
 

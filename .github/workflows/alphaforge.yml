@@ -23,7 +23,7 @@ jobs:
           - { os: ubuntu-latest, python: "3.13", jit: "0" }
           - { os: macos-latest, python: "3.12", jit: "1" } # Apple Silicon
           - { os: macos-latest, python: "3.13", jit: "0" }
-          - { os: macos-15-intel, python: "3.11", jit: "1" } # Intel (macos-13 is retired)
+          - { os: macos-15-intel, python: "3.11", jit: "1" } # Intel; [dev] skips Numba here (no llvmlite wheel)
     defaults:
       run:
         working-directory: alphaforge

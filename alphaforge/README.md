@@ -46,8 +46,10 @@ pip install -e ".[fast]"        # [fast] adds Numba; omit it to run pure Python
 With [uv](https://docs.astral.sh/uv/): `uv venv && uv pip install -e ".[fast]"`.
 
 macOS notes: use a python.org, Homebrew or uv-managed Python 3.11+. Apple's
-system Python 3.9 is too old. No compiler or Xcode tools are needed; all
-dependencies ship wheels for macOS arm64 and x86-64.
+system Python 3.9 is too old. No compiler or Xcode tools are needed. On Intel
+Macs the `[fast]` extra installs nothing, because Numba's compiler (llvmlite)
+no longer publishes Intel macOS wheels; AlphaForge then runs its pure-Python
+engine, which gives identical results more slowly.
 
 ## Use the app
 
